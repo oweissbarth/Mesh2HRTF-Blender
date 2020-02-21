@@ -1,20 +1,14 @@
-# head_centering.py
-#
-# Created by Robert Pelzer, Audio Communication Group, Technical University Berlin on 15.06.2017
+# material_and_assignment.py
+
+# Created by Robert Pelzer, Audio Communication Group, Technical University Berlin on 27.06.2017
 #################################################
+
+# This script will create the materials Skin, Left and Right ear and will automatically assign the materials accordingly. 
+# Two conditions have to be considered: 
+#   1: the head is already alligned and centered so that the ear canals are on the y-axis. This is important because this script defines the ear elements by finding the elements closest to the y-axis.
+#   2: if the head is remeshed the name of the ear (left or right) has to appear in the name. When neither of the expressions occur it is assumed that no re-mashing has taken place yet
 #
-# This script will center the head mesh in blender after the user selected three points (the left and righ ear canal, and a point on the forehead, e.g. the tip of the nose or a point between the eyes)
-# After the centering, the interaural center will coincide with the center of coordinates, the interaural axsi will coincide with the y-axis, and the mesh will look in positive x-direction.
-# NOTE: The head mesh is not rotated above the y-axis (up/down) because it is assued that the natruarl hearing position is already given. If this is not the case, manually rotate abvoe the y-axis after running this script.
-#
-# The following steps must be fowllowed:
-#
-# 0. pre-rotate the head with 90 degree steps until it is in generally in the right position (looking in x-direction and z-axis points upwards)
-#
-# 1. mark the position of the left ear canal and add a lamp point. This point will automatically be called "Point"
-# 2. mark the position of the right ear canal and add another lamp point which will be called "Point.001"
-# 4. mark a point on the forehead with another lamp point which will be called "Point.002"
-# 3. select the head mesh by righ clicking on it and run the script
+# To start the script load the mesh in object mode, select it and run the script.
 
 #                                Mesh2HRTF
 #                Copyright (C) 2015 by Harald Ziegelwanger,
@@ -33,145 +27,218 @@
 #   [2] Ziegelwanger, H., Majdak, P., and Kreuzer, W. (2015). "Numerical calculation of listener-specific head-related transfer functions and sound localization: Microphone model and mesh discretization," The Journal of the Acoustical Society of America, 138, 208-222.
 
 
-
 import bpy
+import bmesh
 import math
 
-
-class MaterialAssignmentOperator(bpy.types.Operator):
-    bl_idname = "object.materialassignment"
-    bl_label = "MaterialAssignment"
-
-    def execute(self, context):
-        return {'FINISHED'}
+head = bpy.context.active_object
+name=head.name
 
 
-# get location of markers
-left_ear_canal = bpy.data.objects['Point']
-left = left_ear_canal.location
-print("left: ", left)
-right_ear_canal = bpy.data.objects['Point.001']
-right = right_ear_canal.location
+
+#################################
+#material part
+################################
+
+# Create Material Skin
+skin = bpy.data.materials.new(name="Skin")
+# Assign Colour
+skin.diffuse_color=(0,1,0)
+#Create new amterial slot
+head.data.materials.append(skin)
+
+# override false names, such as Skin.001 etc
+bpy.context.object.active_material_index = 0
+bpy.context.object.active_material.name = "Skin"
+
+# Create Material for left ear
+left_ear= bpy.data.materials.new(name="Left ear")
+# Assign Colour
+left_ear.diffuse_color=(0,0,1)
+#Create new amterial slot
+head.data.materials.append(left_ear)
+# override false names
+bpy.context.object.active_material_index = 1
+bpy.context.object.active_material.name = "Left ear"
+
+# Create Material for right ear
+right_ear= bpy.data.materials.new(name="Right ear")
+# Assign Colour
+right_ear.diffuse_color=(1,0,0)
+#Create new amterial slot
+head.data.materials.append(right_ear)
+# override false names
+bpy.context.object.active_material_index = 2
+bpy.context.object.active_material.name = "Right ear"
+
+###switch into edit mode
+bpy.ops.object.editmode_toggle()
 
 
-nose_tip = bpy.data.objects['Point.002']
-nose = nose_tip.location
-print("nose: ", nose)
-
-# preperation to delete Points later
-objs = bpy.data.objects
+##############################################
+#finding ears and assigning material
+##############################################
 
 
-#print(nose[2])
-#cube = bpy.data.objects['Cube']
-#cube.location[1]+=1
-#print(cube.location)
-
-## Distance between points on ear canals by calculating the euclidean distance
-left_right_distance=math.sqrt((right[0]-left[0])**2 + (right[1]-left[1])**2 + (right[2]-left[2])**2)
-print("distance",left_right_distance)
-
-###############################################
-# First Step: rotating tilted around on x-axis:
-###############################################
-
-# how much elevation in z-direction?
-delta_z=left[2]-right[2]
-print("deltaz ", delta_z)
-#calculating rotation degree
-alpha=math.asin(delta_z/left_right_distance)
 
 
-# set curser on left ear canal and rotate for alpha degrees around x-axis in respect to left ear
-bpy.context.scene.cursor_location = left
-bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-bpy.ops.transform.rotate(value=alpha, axis=(1, 0, 0))
+obj = bpy.context.edit_object
+me = obj.data
+bm = bmesh.from_edit_mesh(me)
+bpy.ops.mesh.select_all(action = 'DESELECT')
 
-#calculate the new position of the nose tip via matrix multiplication
-###################
+# use before accessing bm.verts[] with blender 2.73
+if hasattr(bm.verts, "ensure_lookup_table"): 
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
 
-# place vector into origin first
-zp=[0,0,0]
-zp[1]=nose[1]-left[1]
-zp[2]=nose[2]-left[2]
+# initialize helper variables
+left_index=0
+right_index=0
+dist_l_old=1
+dist_r_old=1
+y_l_old=1
+y_r_old=1
+y_delta=0.002
 
-# rotate and add center point(left) to translate back parallel
-new_nose=[0,0,0]
-new_nose[0]=nose[0]
-new_nose[1]=math.cos(alpha)*zp[1] - math.sin(alpha)*zp[2] + left[1]
-new_nose[2]=math.sin(alpha)*zp[1] + math.cos(alpha)*zp[2] + left[2]
+# notice in Bmesh polygons are called faces
 
-nose=[new_nose[0], new_nose[1], new_nose[2]]
-nose_tip.location=nose
+# iterate through all faces
+for face in bm.faces:
+    #if face.select:
+        #get the location
+        face_location = face.calc_center_median()
+        
+
+        # because of deformed and graded meshes cases have to be handled differently for each side!
+        if "left" in name:
+    	
+	        # finding left ear
+	        if face_location[1]>0: 
+	            
+	            # when it´ getting close
+	            if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
+	                #y-location
+	                y_loc_l=abs(face_location[1])
+	                #x-z distance sum 
+	                dist_l=abs(face_location[0]) + abs(face_location[2])
+	                
+	                #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
+	                if dist_l < dist_l_old and not (y_loc_l > (y_l_old+ y_delta)) or y_loc_l <  (y_l_old - y_delta):
+	                    left_index=face.index
+	                    dist_l_old=dist_l
+	                    y_l_old= y_loc_l
+	   
+	                
+	        # finding graded right ear
+	        if face_location[1]<0: 
+	            
+	            # when it´ getting close
+	            if abs(face_location[0])<0.01 and abs(face_location[2])<0.01:
+	                #y-location
+	                y_loc_r=abs(face_location[1])
+	                #x-z distance sum 
+	                dist_r=abs(face_location[0]) + abs(face_location[2])
+	                
+	                if dist_r < dist_r_old:
+	            
+	                    right_index=face.index
+	                    dist_r_old=dist_r
+	                    y_r_old= y_loc_r
+
+        elif "right" in name:
+    	
+	        # finding graded left  ear 
+	        if face_location[1]>0: 
+	            
+	            # when it´ getting close
+	            if abs(face_location[0])<0.01 and abs(face_location[2])<0.01:
+	                #y-location
+	                y_loc_l=abs(face_location[1])
+	                #x-z distance sum 
+	                dist_l=abs(face_location[0]) + abs(face_location[2])
+	                
+	                
+	                if dist_l < dist_l_old:
+	                    left_index=face.index
+	                    dist_l_old=dist_l
+	                    y_l_old= y_loc_l
+	   
+	                
+	        # finding right ear
+	        if face_location[1]<0: 
+	            
+	            # when it´ getting close
+	            if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
+	                #y-location
+	                y_loc_r=abs(face_location[1])
+	                #x-z distance sum 
+	                dist_r=abs(face_location[0]) + abs(face_location[2])
+	                
+	                #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
+	                if dist_r < dist_r_old and not(y_loc_r > (y_r_old+ y_delta)) or y_loc_r <  (y_r_old - y_delta):
+	            
+	                    right_index=face.index
+	                    dist_r_old=dist_r
+	                    y_r_old= y_loc_r
 
 
-###############################################
-# Second Step: rotating turned head on z-axis
-###############################################
+        else:
+                
+            # finding left ear
+	        if face_location[1]>0: 
+	            
+	            # when it´ getting close
+	            if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
+	                #y-location
+	                y_loc_l=abs(face_location[1])
+	                #x-z distance sum 
+	                dist_l=abs(face_location[0]) + abs(face_location[2])
+	                
+	                #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
+	                if dist_l < dist_l_old and not (y_loc_l > (y_l_old+ y_delta)) or y_loc_l <  (y_l_old - y_delta):
+	                    left_index=face.index
+	                    dist_l_old=dist_l
+	                    y_l_old= y_loc_l    
+    	
 
-# delta x on x-axis
-delta_x=right[0]-left[0]
-print("deltax ", delta_x)
-#calculating rotation degree
-beta=math.asin(delta_x/left_right_distance)
+	   
+	                
+	        # finding right ear
+	        if face_location[1]<0: 
+	            
+	            # when it´ getting close
+	            if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
+	                #y-location
+	                y_loc_r=abs(face_location[1])
+	                #x-z distance sum 
+	                dist_r=abs(face_location[0]) + abs(face_location[2])
+	                
+	                #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
+	                if dist_r < dist_r_old and not(y_loc_r > (y_r_old+ y_delta)) or y_loc_r <  (y_r_old - y_delta):
+	            
+	                    right_index=face.index
+	                    dist_r_old=dist_r
+	                    y_r_old= y_loc_r
 
+#print(f.index)
 
-# set curser on left ear canal and rotate for alpha degrees in respect to that position
-bpy.context.scene.cursor_location = left
-bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-bpy.ops.transform.rotate(value=beta, axis=(0, 0, 1))
+print(face_location, left_index, right_index)
 
-#again calculate the new position of the nose tip via matrix multiplication
-###################
+bm.faces[left_index].select = True
+bpy.context.object.active_material_index = 1
+bpy.ops.object.material_slot_assign()
+bm.faces[left_index].select = False
+  
+bm.faces[right_index].select = True 
+bpy.context.object.active_material_index = 2
+bpy.ops.object.material_slot_assign()
+bm.faces[right_index].select = False
 
-# place vector into origin first
-#zp=[0,0,0]
-zp[0]=nose[0]-left[0]
-zp[1]=nose[1]-left[1]
+# Show the updates in the viewport
+# and recalculate n-gon tessellation.
+#bmesh.update_edit_mesh(me, True)
 
-# rotate and add center point(left) to translate back parallel
-#new_nose=[0,0,0]
-new_nose[2]=nose[2]
-new_nose[0]=math.cos(beta)*zp[0] - math.sin(beta)*zp[1] + left[0]
-new_nose[1]=math.sin(beta)*zp[0] + math.cos(beta)*zp[1] + left[1]
-
-nose=[new_nose[0], new_nose[1], new_nose[2]]
-nose_tip.location=nose
-
-###############################################
-# Third Step: correcting offset on x-axis
-###############################################
-translate_x=(-left[0], 0, 0)
-print("transx",translate_x)
-bpy.ops.transform.translate(value=translate_x)
-
-nose_tip.location[0]=nose[0]-left[0] 
-
-###############################################
-# Fourth Step: centering on y-axis
-###############################################
-
-## this centers the head to the middle of the distance of the two ear canals
-#translate_y=(0, -(left_right_distance/2 + left[1]), 0)
-
-
-## this centers the head to the nose tip !!
-translate_y=(0, -nose[1], 0)
-print("transy",translate_y)
-bpy.ops.transform.translate(value=translate_y)
-
-nose_tip.location[1]=0.0
-###############################################
-# Fifth Step: correcting offset on z-axis
-###############################################
-
-translate_z=(0, 0, -left[2])
-print("transz",translate_z)
-bpy.ops.transform.translate(value=translate_z)
-nose_tip.location[2]=nose[2]-left[2]
-
-##########
-# remove the added lamp points
-objs.remove(objs["Point"], True)
-objs.remove(objs["Point.001"], True)
-objs.remove(objs["Point.002"], True)
+bpy.ops.object.editmode_toggle()
+#renaming the object
+head.name="Reference"

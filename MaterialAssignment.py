@@ -31,214 +31,204 @@ import bpy
 import bmesh
 import math
 
-head = bpy.context.active_object
-name=head.name
+class MaterialAssignment(bpy.types.Operator):
+    bl_idname = "object.materialassignment"
+    bl_label = "MaterialAssignment"
+
+    def execute(self, context):
+        assign_material(bpy.context.active_object)
+        return {'FINISHED'}
+
+
+def setup_materials(head):
+    # Create Material Skin
+    skin = bpy.data.materials.new(name="Skin")
+    # Assign Colour
+    skin.diffuse_color=(0,1,0,1)
+    #Create new amterial slot
+    head.data.materials.append(skin)
+
+    # override false names, such as Skin.001 etc
+    bpy.context.object.active_material_index = 0
+    bpy.context.object.active_material.name = "Skin"
+
+    # Create Material for left ear
+    left_ear= bpy.data.materials.new(name="Left ear")
+    # Assign Colour
+    left_ear.diffuse_color=(0,0,1,1)
+    #Create new amterial slot
+    head.data.materials.append(left_ear)
+    # override false names
+    bpy.context.object.active_material_index = 1
+    bpy.context.object.active_material.name = "Left ear"
+
+    # Create Material for right ear
+    right_ear= bpy.data.materials.new(name="Right ear")
+    # Assign Colour
+    right_ear.diffuse_color=(1,0,0,1)
+    #Create new amterial slot
+    head.data.materials.append(right_ear)
+    # override false names
+    bpy.context.object.active_material_index = 2
+    bpy.context.object.active_material.name = "Right ear"
 
 
 
-#################################
-#material part
-################################
+def find_ear_indices(bm, head):
+    name = head.name    
 
-# Create Material Skin
-skin = bpy.data.materials.new(name="Skin")
-# Assign Colour
-skin.diffuse_color=(0,1,0)
-#Create new amterial slot
-head.data.materials.append(skin)
-
-# override false names, such as Skin.001 etc
-bpy.context.object.active_material_index = 0
-bpy.context.object.active_material.name = "Skin"
-
-# Create Material for left ear
-left_ear= bpy.data.materials.new(name="Left ear")
-# Assign Colour
-left_ear.diffuse_color=(0,0,1)
-#Create new amterial slot
-head.data.materials.append(left_ear)
-# override false names
-bpy.context.object.active_material_index = 1
-bpy.context.object.active_material.name = "Left ear"
-
-# Create Material for right ear
-right_ear= bpy.data.materials.new(name="Right ear")
-# Assign Colour
-right_ear.diffuse_color=(1,0,0)
-#Create new amterial slot
-head.data.materials.append(right_ear)
-# override false names
-bpy.context.object.active_material_index = 2
-bpy.context.object.active_material.name = "Right ear"
-
-###switch into edit mode
-bpy.ops.object.editmode_toggle()
-
-
-##############################################
-#finding ears and assigning material
-##############################################
-
-
-
-
-obj = bpy.context.edit_object
-me = obj.data
-bm = bmesh.from_edit_mesh(me)
-bpy.ops.mesh.select_all(action = 'DESELECT')
-
-# use before accessing bm.verts[] with blender 2.73
-if hasattr(bm.verts, "ensure_lookup_table"): 
     bm.verts.ensure_lookup_table()
     bm.faces.ensure_lookup_table()
 
-# initialize helper variables
-left_index=0
-right_index=0
-dist_l_old=1
-dist_r_old=1
-y_l_old=1
-y_r_old=1
-y_delta=0.002
+    # initialize helper variables
+    left_index=0
+    right_index=0
+    dist_l_old=1
+    dist_r_old=1
+    y_l_old=1
+    y_r_old=1
+    y_delta=0.002
 
-# notice in Bmesh polygons are called faces
+    # notice in Bmesh polygons are called faces
 
-# iterate through all faces
-for face in bm.faces:
-    #if face.select:
-        #get the location
-        face_location = face.calc_center_median()
+    # iterate through all faces
+    for face in bm.faces:
+        #if face.select:
+            #get the location
+            face_location = face.calc_center_median()
+            
+
+            # because of deformed and graded meshes cases have to be handled differently for each side!
+            if "left" in name:
+            
+                # finding left ear
+                if face_location[1]>0: 
+                    
+                    # when it´ getting close
+                    if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
+                        #y-location
+                        y_loc_l=abs(face_location[1])
+                        #x-z distance sum 
+                        dist_l=abs(face_location[0]) + abs(face_location[2])
+                        
+                        #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
+                        if dist_l < dist_l_old and not (y_loc_l > (y_l_old+ y_delta)) or y_loc_l <  (y_l_old - y_delta):
+                            left_index=face.index
+                            dist_l_old=dist_l
+                            y_l_old= y_loc_l
         
+                        
+                # finding graded right ear
+                if face_location[1]<0: 
+                    
+                    # when it´ getting close
+                    if abs(face_location[0])<0.01 and abs(face_location[2])<0.01:
+                        #y-location
+                        y_loc_r=abs(face_location[1])
+                        #x-z distance sum 
+                        dist_r=abs(face_location[0]) + abs(face_location[2])
+                        
+                        if dist_r < dist_r_old:
+                    
+                            right_index=face.index
+                            dist_r_old=dist_r
+                            y_r_old= y_loc_r
 
-        # because of deformed and graded meshes cases have to be handled differently for each side!
-        if "left" in name:
-    	
-	        # finding left ear
-	        if face_location[1]>0: 
-	            
-	            # when it´ getting close
-	            if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
-	                #y-location
-	                y_loc_l=abs(face_location[1])
-	                #x-z distance sum 
-	                dist_l=abs(face_location[0]) + abs(face_location[2])
-	                
-	                #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
-	                if dist_l < dist_l_old and not (y_loc_l > (y_l_old+ y_delta)) or y_loc_l <  (y_l_old - y_delta):
-	                    left_index=face.index
-	                    dist_l_old=dist_l
-	                    y_l_old= y_loc_l
-	   
-	                
-	        # finding graded right ear
-	        if face_location[1]<0: 
-	            
-	            # when it´ getting close
-	            if abs(face_location[0])<0.01 and abs(face_location[2])<0.01:
-	                #y-location
-	                y_loc_r=abs(face_location[1])
-	                #x-z distance sum 
-	                dist_r=abs(face_location[0]) + abs(face_location[2])
-	                
-	                if dist_r < dist_r_old:
-	            
-	                    right_index=face.index
-	                    dist_r_old=dist_r
-	                    y_r_old= y_loc_r
-
-        elif "right" in name:
-    	
-	        # finding graded left  ear 
-	        if face_location[1]>0: 
-	            
-	            # when it´ getting close
-	            if abs(face_location[0])<0.01 and abs(face_location[2])<0.01:
-	                #y-location
-	                y_loc_l=abs(face_location[1])
-	                #x-z distance sum 
-	                dist_l=abs(face_location[0]) + abs(face_location[2])
-	                
-	                
-	                if dist_l < dist_l_old:
-	                    left_index=face.index
-	                    dist_l_old=dist_l
-	                    y_l_old= y_loc_l
-	   
-	                
-	        # finding right ear
-	        if face_location[1]<0: 
-	            
-	            # when it´ getting close
-	            if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
-	                #y-location
-	                y_loc_r=abs(face_location[1])
-	                #x-z distance sum 
-	                dist_r=abs(face_location[0]) + abs(face_location[2])
-	                
-	                #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
-	                if dist_r < dist_r_old and not(y_loc_r > (y_r_old+ y_delta)) or y_loc_r <  (y_r_old - y_delta):
-	            
-	                    right_index=face.index
-	                    dist_r_old=dist_r
-	                    y_r_old= y_loc_r
+            elif "right" in name:
+            
+                # finding graded left  ear 
+                if face_location[1]>0: 
+                    
+                    # when it´ getting close
+                    if abs(face_location[0])<0.01 and abs(face_location[2])<0.01:
+                        #y-location
+                        y_loc_l=abs(face_location[1])
+                        #x-z distance sum 
+                        dist_l=abs(face_location[0]) + abs(face_location[2])
+                        
+                        
+                        if dist_l < dist_l_old:
+                            left_index=face.index
+                            dist_l_old=dist_l
+                            y_l_old= y_loc_l
+        
+                        
+                # finding right ear
+                if face_location[1]<0: 
+                    
+                    # when it´ getting close
+                    if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
+                        #y-location
+                        y_loc_r=abs(face_location[1])
+                        #x-z distance sum 
+                        dist_r=abs(face_location[0]) + abs(face_location[2])
+                        
+                        #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
+                        if dist_r < dist_r_old and not(y_loc_r > (y_r_old+ y_delta)) or y_loc_r <  (y_r_old - y_delta):
+                    
+                            right_index=face.index
+                            dist_r_old=dist_r
+                            y_r_old= y_loc_r
 
 
-        else:
-                
-            # finding left ear
-	        if face_location[1]>0: 
-	            
-	            # when it´ getting close
-	            if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
-	                #y-location
-	                y_loc_l=abs(face_location[1])
-	                #x-z distance sum 
-	                dist_l=abs(face_location[0]) + abs(face_location[2])
-	                
-	                #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
-	                if dist_l < dist_l_old and not (y_loc_l > (y_l_old+ y_delta)) or y_loc_l <  (y_l_old - y_delta):
-	                    left_index=face.index
-	                    dist_l_old=dist_l
-	                    y_l_old= y_loc_l    
-    	
+            else:
+                    
+                # finding left ear
+                if face_location[1]>0: 
+                    
+                    # when it´ getting close
+                    if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
+                        #y-location
+                        y_loc_l=abs(face_location[1])
+                        #x-z distance sum 
+                        dist_l=abs(face_location[0]) + abs(face_location[2])
+                        
+                        #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
+                        if dist_l < dist_l_old and not (y_loc_l > (y_l_old+ y_delta)) or y_loc_l <  (y_l_old - y_delta):
+                            left_index=face.index
+                            dist_l_old=dist_l
+                            y_l_old= y_loc_l    
+            
 
-	   
-	                
-	        # finding right ear
-	        if face_location[1]<0: 
-	            
-	            # when it´ getting close
-	            if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
-	                #y-location
-	                y_loc_r=abs(face_location[1])
-	                #x-z distance sum 
-	                dist_r=abs(face_location[0]) + abs(face_location[2])
-	                
-	                #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
-	                if dist_r < dist_r_old and not(y_loc_r > (y_r_old+ y_delta)) or y_loc_r <  (y_r_old - y_delta):
-	            
-	                    right_index=face.index
-	                    dist_r_old=dist_r
-	                    y_r_old= y_loc_r
+        
+                        
+                # finding right ear
+                if face_location[1]<0: 
+                    
+                    # when it´ getting close
+                    if abs(face_location[0])<0.001 and abs(face_location[2])<0.001:
+                        #y-location
+                        y_loc_r=abs(face_location[1])
+                        #x-z distance sum 
+                        dist_r=abs(face_location[0]) + abs(face_location[2])
+                        
+                        #when it´ getting closer - y-location must be monitored for cases where the y-axis passes through the tragus
+                        if dist_r < dist_r_old and not(y_loc_r > (y_r_old+ y_delta)) or y_loc_r <  (y_r_old - y_delta):
+                    
+                            right_index=face.index
+                            dist_r_old=dist_r
+                            y_r_old= y_loc_r
 
-#print(f.index)
+    return left_index, right_index
 
-print(face_location, left_index, right_index)
 
-bm.faces[left_index].select = True
-bpy.context.object.active_material_index = 1
-bpy.ops.object.material_slot_assign()
-bm.faces[left_index].select = False
-  
-bm.faces[right_index].select = True 
-bpy.context.object.active_material_index = 2
-bpy.ops.object.material_slot_assign()
-bm.faces[right_index].select = False
+def assign_material(head):
 
-# Show the updates in the viewport
-# and recalculate n-gon tessellation.
-#bmesh.update_edit_mesh(me, True)
+    name=head.name
 
-bpy.ops.object.editmode_toggle()
-#renaming the object
-head.name="Reference"
+    setup_materials(head)
+
+    bm = bmesh.new()
+    bm.from_mesh(head.data)
+
+    left_index, right_index = find_ear_indices(bm, head)
+
+    print(left_index, right_index)
+
+    bm.faces[left_index].material_index = 1
+    bm.faces[right_index].material_index = 2 
+
+    bm.to_mesh(head.data)
+    bm.free()
+    #renaming the object
+    head.name="Reference"

@@ -17,28 +17,29 @@
 import bpy
 from bpy.props import StringProperty, EnumProperty, IntProperty
 from bpy_extras.io_utils import ExportHelper
+import os
 
-class ExportEvaluationgrid(bpy.types.Operator, ExportHelper):
+class ExportEvaluationGrid(bpy.types.Operator, ExportHelper):
     '''Export a single object as an evaluation grid'''
     bl_idname = "export_evaluationgrid.inp"
     bl_label = "Export Evaluation Grid"
 
     filename_ext = ".txt"
-    filter_glob = StringProperty(default="*.txt", options={'HIDDEN'})
+    filter_glob: StringProperty(default="*.txt", options={'HIDDEN'})
 
-    offset = IntProperty(
+    offset: IntProperty(
             name="Offset",
             description="Node and element index offset",
             default=0,
             min=0,
             max=10000000,
             )
-    suffix = StringProperty(
+    suffix: StringProperty(
             name="Element suffix",
             description="Element suffix",
             default=" 2 0 1",
             )
-    unit = EnumProperty(
+    unit: EnumProperty(
             name="Unit",
             description="Unit of the evaluation grid",
             items=[('m', 'm', 'Meter'), ('mm', 'mm', 'Millimeter')],
@@ -53,7 +54,7 @@ class ExportEvaluationgrid(bpy.types.Operator, ExportHelper):
         filepath = self.filepath
         filepath = bpy.path.ensure_ext(filepath, self.filename_ext)
         keywords = self.as_keywords(ignore=("check_existing", "filter_glob"))
-        return ExportEvaluationgrid.save(self, context, **keywords)
+        return ExportEvaluationGrid.save(self, context, **keywords)
 
     def draw(self, context):
         layout = self.layout
@@ -120,6 +121,3 @@ class ExportEvaluationgrid(bpy.types.Operator, ExportHelper):
 
         return {'FINISHED'}
 
-
-def menu_func_export(self, context):
-    self.layout.operator(ExportEvaluationgrid.bl_idname, text="Evaluation grid (.txt)")

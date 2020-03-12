@@ -45,16 +45,20 @@ def register():
         register_class(cls)
     
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_evaluation_grid_export)
 
 def unregister():
     import bpy.types
     from bpy.utils import unregister_class
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_evaluation_grid_export)
     for cls in reversed(classes):
         unregister_class(cls)
 
 
-
-
 def menu_func_export(self, context):
     self.layout.operator(ExportMesh2HRTF.bl_idname, text="Mesh2HRTF")
+
+
+def menu_func_evaluation_grid_export(self, context):
+    self.layout.operator(ExportEvaluationGrid.bl_idname, text="Mesh2HRTF Evaluation grid (.txt)")

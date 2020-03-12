@@ -26,83 +26,72 @@ from math import pi
 from bpy.props import StringProperty, BoolProperty, EnumProperty, IntProperty
 from bpy_extras.io_utils import ExportHelper
 
-bl_info = {
-    "name": "Mesh2HRTF input format",
-    "author": "Harald Ziegelwanger",
-    "version": (0, 1, 3),
-    "blender": (2, 76),
-    "location": "File > Import-Export",
-    "description": "Export Mesh2HRTF input files",
-    "warning": "",
-    "wiki_url": "",
-    "tracker_url": "",
-    "support": "COMMUNITY",
-    "category": "Import-Export"}
-
 
 class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
     '''Export an object as Mesh2HRTF input files'''
     bl_idname = "export_mesh2hrtf.inp"
     bl_label = "Export Mesh2HRTF"
+    bl_options = {'PRESET'}
+
 
     filename_ext = ""
     filter_glob = StringProperty(default="", options={'HIDDEN'})
 
-    title = StringProperty(
+    title : StringProperty(
         name="Title",
         description="Title",
         default="Head-Related Transfer Functions",
         )
-    frequencyStepSize = IntProperty(
+    frequencyStepSize : IntProperty(
         name="Freq step",
         description="Lowest frequency and frequency step-size",
         default=100,
         min=10,
         max=24000,
         )
-    maxFrequency = IntProperty(
+    maxFrequency : IntProperty(
         name="Freq max",
         description="Highest evaluated frequency",
         default=20000,
         min=10,
         max=24000,
         )
-    cpuFirst = IntProperty(
+    cpuFirst : IntProperty(
         name="CPU (first)",
         description="First 'CPU' used",
         default=1,
         min=1,
         max=100,
         )
-    cpuLast = IntProperty(
+    cpuLast : IntProperty(
         name="CPU (last)",
         description="Last 'CPU' used",
         default=10,
         min=1,
         max=100,
         )
-    numCoresPerCPU = IntProperty(
+    numCoresPerCPU : IntProperty(
         name="Num. of used cores",
         description="Number of used cores per CPU",
         default=8,
         min=1,
         max=8,
         )
-    pictures = BoolProperty(
+    pictures : BoolProperty(
         name="Pictures",
         description="Render pictures",
         default=True,
         )
-    ear = EnumProperty(
+    ear : EnumProperty(
         name="Ear",
         description="Selected ear",
-        items=[('Left ear', 'left', 'Left ear'),
-               ('Right ear', 'right', 'Right ear'),
-               ('Both ears', 'both', 'Both ears'),
-               ('None', 'none', 'None')],
-        default='Both ears',
+        items=[('LEFT_EAR', 'left', 'Left ear'),
+               ('RIGHT_EAR', 'right', 'Right ear'),
+               ('BOTH_EARS', 'both', 'Both ears'),
+               ('NONE', 'none', 'None')],
+        default='BOTH_EARS',
         )
-    evaluationGrid1 = EnumProperty(
+    evaluationGrid1 : EnumProperty(
         name="Ev.Grid 1",
         description="Selected evaluation grid",
         items=[('21_NF', 'NF', 'NF HYPER (N=46)'),
@@ -119,7 +108,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('None', 'None', 'None')],
         default='3_ARI',
         )
-    evaluationGrid2 = EnumProperty(
+    evaluationGrid2 : EnumProperty(
         name="Ev.Grid 2",
         description="Selected evaluation grid",
         items=[('21_NF', 'NF', 'NF HYPER (N=46)'),
@@ -136,7 +125,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('None', 'None', 'None')],
         default='None',
         )
-    evaluationGrid3 = EnumProperty(
+    evaluationGrid3 : EnumProperty(
         name="Ev.Grid 3",
         description="Selected evaluation grid",
         items=[('21_NF', 'NF', 'NF HYPER (N=46)'),
@@ -153,7 +142,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('None', 'None', 'None')],
         default='None',
         )
-    evaluationGrid4 = EnumProperty(
+    evaluationGrid4 : EnumProperty(
         name="Ev.Grid 4",
         description="Selected evaluation grid",
         items=[('21_NF', 'NF', 'NF HYPER (N=46)'),
@@ -170,7 +159,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('None', 'None', 'None')],
         default='None',
         )
-    evaluationGrid5 = EnumProperty(
+    evaluationGrid5 : EnumProperty(
         name="Ev.Grid 5",
         description="Selected evaluation grid",
         items=[('21_NF', 'NF', 'NF HYPER (N=46)'),
@@ -187,7 +176,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('None', 'None', 'None')],
         default='None',
         )
-    method = EnumProperty(
+    method : EnumProperty(
         name="Method",
         description="Choose the calculation method",
         items=[('0', 'BEM', 'Traditional BEM'),
@@ -195,53 +184,53 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('4', 'ML-FMM BEM', 'Multilevel fast-multipole method')],
         default='4',
         )
-    reciprocity = BoolProperty(
+    reciprocity : BoolProperty(
         name="Recip.",
         description="Calculation with reciprocity",
         default=True,
         )
-    sourceXPosition = StringProperty(
+    sourceXPosition : StringProperty(
         name="Source (x)",
         description="Source Position (X-Coordinate)",
         default="0",
         )
-    sourceYPosition = StringProperty(
+    sourceYPosition : StringProperty(
         name="Source (y)",
         description="Source Position (Y-Coordinate)",
         default="101",
         )
-    sourceZPosition = StringProperty(
+    sourceZPosition : StringProperty(
         name="Source (z)",
         description="Source Position (Z-Coordinate)",
         default="0",
         )
-    speedOfSound = StringProperty(
+    speedOfSound : StringProperty(
         name="c (m/s)",
         description="Speed of sound (m/s)",
         default="346.18",
         )
-    densityOfMedium = StringProperty(
+    densityOfMedium : StringProperty(
         name="rho ()",
         description="Density of air (kg/m^3)",
         default="1.1839",
         )
-    unit = EnumProperty(
+    unit : EnumProperty(
         name="Unit",
         description="Unit of the object",
         items=[('m', 'm', 'Meter'), ('mm', 'mm', 'Millimeter')],
         default='mm',
         )
-    frequencyDependency = BoolProperty(
+    frequencyDependency : BoolProperty(
         name="Freq.-dep.",
         description="Use frequency-dependent meshes",
         default=False,
         )
-    nearFieldCalculation = BoolProperty(
+    nearFieldCalculation : BoolProperty(
         name="NF-Calc.",
         description="Calculate near-field HRTFs",
         default=False,
         )
-    programPath = StringProperty(
+    programPath : StringProperty(
         name="Mesh2HRTF-path",
         description="Path to mesh2HRTF",
         default=r"C:\Users\jkhan\Documents\Mesh2HRTF - Kopie\trunk",
@@ -266,7 +255,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
         row.prop(self, "ear")
         row = layout.row()
         row.prop(self, "pictures")
-        layout.label("Point Source:")
+        layout.label(text="Point Source:")
         row = layout.row()
         row.prop(self, "sourceXPosition")
         row = layout.row()
@@ -275,16 +264,16 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
         row.prop(self, "sourceZPosition")
         row = layout.row()
         row.prop(self, "reciprocity")
-        layout.label("Constants:")
+        layout.label(text="Constants:")
         row = layout.row()
         row.prop(self, "speedOfSound")
         row = layout.row()
         row.prop(self, "densityOfMedium")
-        layout.label("ObjectMeshes:")
+        layout.label(text="ObjectMeshes:")
         row = layout.row()
         row.prop(self, "unit")
         row = layout.row()
-        layout.label("Evaluation Grids:")
+        layout.label(text="Evaluation Grids:")
         row = layout.row()
         row.prop(self, "evaluationGrid1")
         row = layout.row()
@@ -297,7 +286,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
         row.prop(self, "evaluationGrid5")
         row = layout.row()
         row.prop(self, "nearFieldCalculation")
-        layout.label("Frequencies:")
+        layout.label(text="Frequencies:")
         row = layout.row()
         row.prop(self, "frequencyStepSize")
         row = layout.row()
@@ -306,14 +295,14 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
         row.prop(self, "frequencyDependency")
         row = layout.row()
         row.prop(self, "method")
-        layout.label("Cluster:")
+        layout.label(text="Cluster:")
         row = layout.row()
         row.prop(self, "cpuFirst")
         row = layout.row()
         row.prop(self, "cpuLast")
         row = layout.row()
         row.prop(self, "numCoresPerCPU")
-        layout.label("Mesh2HRTF:")
+        layout.label(text="Mesh2HRTF:")
         row = layout.row()
         row.prop(self, "programPath")
 
@@ -327,7 +316,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
              cpuLast=10,
              numCoresPerCPU=8,
              pictures=True,
-             ear='Both ears',
+             ear='BOTH_EARS',
              evaluationGrid1='3_ARI',
              evaluationGrid2='None',
              evaluationGrid3='None',
@@ -417,11 +406,11 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
 #         bpy.data.scenes['Scene'].camera = cam
         cam.data.clip_end = 0.1
         cam.data.clip_end = 1000
-        lamp = bpy.data.objects['Lamp']
-        lampradius = 300
-        lamp.location = (0, lampradius, 0)
-        bpy.data.lamps['Lamp'].energy = 800
-        bpy.data.lamps['Lamp'].distance = 100
+        light = bpy.data.objects['Light']
+        lightradius = 300
+        light.location = (0, lightradius, 0)
+        bpy.data.lights['Light'].energy = 800
+        bpy.data.lights['Light'].distance = 100
         renderloc = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0.707, 0.707, 0], [-0.707, 0.707, 0], [0.707, -0.707, 0], [-0.707, -0.707, 0]]  # , [0.707, 0, 0.707], [-0.707, 0, 0.707], [0.707, 0,-0.707], [-0.707, 0,-0.707], [0, 0.707, 0.707], [0,-0.707, 0.707], [0, 0.707,-0.707], [0,-0.707,-0.707]]
         renderrot = [[pi/2, 0, pi/2], [pi/2, 0, 3*pi/2], [pi/2, 0, pi], [3/2*pi, pi, pi], [pi/2, 0, 3/4*pi], [pi/2, 0, 5/4*pi], [pi/2, 0, pi/4], [pi/2, 0, -pi/4]]  # , [pi/4, 0, pi/2], [5/4*pi, pi, pi/2], [3/4*pi, 0, pi/2], [0, 4*5/pi, 0], [pi/4, 0, pi], [pi/4, 0, 0], [3/4*pi, 0, pi], [3/4*pi, 0, 0]]
         rendernam = [[0, 0], [180, 0], [90, 0], [270, 0], [45, 0], [135, 0], [315, 0], [225, 0]]
@@ -454,7 +443,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
         numCPUs = cpuLast-cpuFirst+1
 
         numEars = 1
-        if ear == 'Both ears':
+        if ear == 'BOTH_EARS':
             numEars = 2
 
         unitFactor = 1
@@ -479,7 +468,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
 # ------------------------ Write object data -----------------------------------
         for obj in bpy.context.scene.objects[:]:
             if obj.type == 'MESH' and not obj.name == 'User':
-                bpy.context.scene.objects.active = obj
+                bpy.context.view_layer.objects.active = obj
                 bpy.ops.object.transform_apply(location=True)
                 bpy.ops.object.transform_apply(rotation=True)
                 bpy.ops.object.transform_apply(scale=True)
@@ -819,16 +808,16 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
             earCenter, earArea = calculateReceiverProperties(obj,obj_data,unitFactor)
 
             # write left ear data
-            if ear=='Left ear' or ear=='Both ears':
+            if ear=='LEFT_EAR' or ear=='BOTH_EARS':
                 fw("% left ear / receiver\n")
                 fw("receiverCenter(1,1:3)=[%f %f %f];\n" % (earCenter[0][0], earCenter[0][1], earCenter[0][2]))
                 fw("receiverArea(1,1)    =%g;\n" % earArea[0])
 
             # write right ear data
-            if ear=='Right ear' or ear=='Both ears':
-                if ear=='Right ear':
+            if ear=='RIGHT_EAR' or ear=='BOTH_EARS':
+                if ear=='RIGHT_EAR':
                     nn = 1
-                if ear=='Both ears':
+                if ear=='BOTH_EARS':
                     nn = 2
 
                 fw("% right ear / receiver\n")
@@ -872,7 +861,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
             for ii in range(0, len(renderloc)):
                 cam.location = (renderloc[ii][0]*camradius, renderloc[ii][1]*camradius, renderloc[ii][2]*camradius)
                 cam.rotation_euler = (renderrot[ii][0], renderrot[ii][1], renderrot[ii][2])
-                lamp.location = (renderloc[ii][0]*lampradius, renderloc[ii][1]*lampradius, renderloc[ii][2]*lampradius)
+                light.location = (renderloc[ii][0]*lightradius, renderloc[ii][1]*lightradius, renderloc[ii][2]*lightradius)
                 bpy.ops.render.render()
                 temp = ("%s/Pictures/" % filepath1)
                 if not os.path.exists(temp):
@@ -1047,10 +1036,10 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                             tmpEar='Right ear'
                         '''
                         #changed tmpEar to ear 
-                        if ear=='Right ear':
-                            tmpEar='Right ear'
-                        if ear=='Left ear':
-                            tmpEar='Left ear'
+                        if ear=='RIGHT_EAR':
+                            tmpEar='RIGHT_EAR'
+                        if ear=='LEFT_EAR':
+                            tmpEar='LEFT_EAR'
                         fw("BOUNDARY\n")
                         for ii in range(len(obj_data.polygons[:])):
                             if obj.material_slots[obj_data.polygons[ii].material_index].name == obj.material_slots[tmpEar].name:
@@ -1083,24 +1072,11 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                     file.close()
 
         for obj in bpy.context.scene.objects[:]:
-            bpy.data.objects[obj.name].select = False
+            bpy.data.objects[obj.name].select_set(False)
         if nearFieldCalculation:
-            bpy.data.objects['NFGrid'].select = True
+            bpy.data.objects['NFGrid'].select_set(True)
             bpy.ops.object.delete()
 
         return {'FINISHED'}
 
 
-# ----------------------- Blender add-on registration --------------------------
-def menu_func_export(self, context):
-    self.layout.operator(ExportMesh2HRTF.bl_idname, text="Mesh2HRTF")
-
-
-def register():
-    bpy.utils.register_class(ExportMesh2HRTF)
-    bpy.types.INFO_MT_file_export.append(menu_func_export)
-
-
-def unregister():
-    bpy.utils.unregister_class(ExportMesh2HRTF)
-    bpy.types.INFO_MT_file_export.remove(menu_func_export)

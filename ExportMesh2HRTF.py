@@ -37,52 +37,73 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
     filename_ext = ""
     filter_glob = StringProperty(default="", options={'HIDDEN'})
 
-    title : StringProperty(
+    title: StringProperty(
         name="Title",
         description="Title",
         default="Head-Related Transfer Functions",
         )
-    frequencyStepSize : IntProperty(
-        name="Freq step",
-        description="Lowest frequency and frequency step-size",
+    frequencyStepMode: EnumProperty(
+        name="Frequency step mode",
+        description="Selected ear",
+        items=[('STEP_SIZE', 'step size', 'Step size mode'),
+               ('STEP_COUNT', 'step count', 'Step size mode')
+              ],
+        default='STEP_SIZE',
+        )
+    frequencyStepCount: IntProperty(
+        name="Freq step count",
+        description="Number of Frequency steps",
+        default=129,
+        min=1
+    )
+    frequencyStepSize: IntProperty(
+        name="Freq step size",
+        description="Frequency step-size",
         default=100,
         min=10,
         max=24000,
         )
-    maxFrequency : IntProperty(
+    minFrequency: IntProperty(
+        name="Freq min",
+        description="Lowest evaluated frequency",
+        default=0,
+        min=0,
+        max=24000,
+        )
+    maxFrequency: IntProperty(
         name="Freq max",
         description="Highest evaluated frequency",
         default=20000,
         min=10,
         max=24000,
         )
-    cpuFirst : IntProperty(
+    cpuFirst: IntProperty(
         name="CPU (first)",
         description="First 'CPU' used",
         default=1,
         min=1,
         max=100,
         )
-    cpuLast : IntProperty(
+    cpuLast: IntProperty(
         name="CPU (last)",
         description="Last 'CPU' used",
         default=10,
         min=1,
         max=100,
         )
-    numCoresPerCPU : IntProperty(
+    numCoresPerCPU: IntProperty(
         name="Num. of used cores",
         description="Number of used cores per CPU",
         default=8,
         min=1,
         max=8,
         )
-    pictures : BoolProperty(
+    pictures: BoolProperty(
         name="Pictures",
         description="Render pictures",
         default=True,
         )
-    ear : EnumProperty(
+    ear: EnumProperty(
         name="Ear",
         description="Selected ear",
         items=[('LEFT_EAR', 'left', 'Left ear'),
@@ -91,7 +112,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('NONE', 'none', 'None')],
         default='BOTH_EARS',
         )
-    evaluationGrid1 : EnumProperty(
+    evaluationGrid1: EnumProperty(
         name="Ev.Grid 1",
         description="Selected evaluation grid",
         items=[('21_NF', 'NF', 'NF HYPER (N=46)'),
@@ -108,7 +129,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('None', 'None', 'None')],
         default='3_ARI',
         )
-    evaluationGrid2 : EnumProperty(
+    evaluationGrid2: EnumProperty(
         name="Ev.Grid 2",
         description="Selected evaluation grid",
         items=[('21_NF', 'NF', 'NF HYPER (N=46)'),
@@ -125,7 +146,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('None', 'None', 'None')],
         default='None',
         )
-    evaluationGrid3 : EnumProperty(
+    evaluationGrid3: EnumProperty(
         name="Ev.Grid 3",
         description="Selected evaluation grid",
         items=[('21_NF', 'NF', 'NF HYPER (N=46)'),
@@ -142,7 +163,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('None', 'None', 'None')],
         default='None',
         )
-    evaluationGrid4 : EnumProperty(
+    evaluationGrid4: EnumProperty(
         name="Ev.Grid 4",
         description="Selected evaluation grid",
         items=[('21_NF', 'NF', 'NF HYPER (N=46)'),
@@ -159,7 +180,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('None', 'None', 'None')],
         default='None',
         )
-    evaluationGrid5 : EnumProperty(
+    evaluationGrid5: EnumProperty(
         name="Ev.Grid 5",
         description="Selected evaluation grid",
         items=[('21_NF', 'NF', 'NF HYPER (N=46)'),
@@ -176,7 +197,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('None', 'None', 'None')],
         default='None',
         )
-    method : EnumProperty(
+    method: EnumProperty(
         name="Method",
         description="Choose the calculation method",
         items=[('0', 'BEM', 'Traditional BEM'),
@@ -184,53 +205,53 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                ('4', 'ML-FMM BEM', 'Multilevel fast-multipole method')],
         default='4',
         )
-    reciprocity : BoolProperty(
+    reciprocity: BoolProperty(
         name="Recip.",
         description="Calculation with reciprocity",
         default=True,
         )
-    sourceXPosition : StringProperty(
+    sourceXPosition: StringProperty(
         name="Source (x)",
         description="Source Position (X-Coordinate)",
         default="0",
         )
-    sourceYPosition : StringProperty(
+    sourceYPosition: StringProperty(
         name="Source (y)",
         description="Source Position (Y-Coordinate)",
         default="101",
         )
-    sourceZPosition : StringProperty(
+    sourceZPosition: StringProperty(
         name="Source (z)",
         description="Source Position (Z-Coordinate)",
         default="0",
         )
-    speedOfSound : StringProperty(
+    speedOfSound: StringProperty(
         name="c (m/s)",
         description="Speed of sound (m/s)",
         default="346.18",
         )
-    densityOfMedium : StringProperty(
+    densityOfMedium: StringProperty(
         name="rho ()",
         description="Density of air (kg/m^3)",
         default="1.1839",
         )
-    unit : EnumProperty(
+    unit: EnumProperty(
         name="Unit",
         description="Unit of the object",
         items=[('m', 'm', 'Meter'), ('mm', 'mm', 'Millimeter')],
         default='mm',
         )
-    frequencyDependency : BoolProperty(
+    frequencyDependency: BoolProperty(
         name="Freq.-dep.",
         description="Use frequency-dependent meshes",
         default=False,
         )
-    nearFieldCalculation : BoolProperty(
+    nearFieldCalculation: BoolProperty(
         name="NF-Calc.",
         description="Calculate near-field HRTFs",
         default=False,
         )
-    programPath : StringProperty(
+    programPath: StringProperty(
         name="Mesh2HRTF-path",
         description="Path to mesh2HRTF",
         default=r"C:\Users\jkhan\Documents\Mesh2HRTF - Kopie\trunk",
@@ -288,7 +309,16 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
         row.prop(self, "nearFieldCalculation")
         layout.label(text="Frequencies:")
         row = layout.row()
-        row.prop(self, "frequencyStepSize")
+        layout.label(text="Frequency step mode")
+        row.prop(self, "frequencyStepMode", expand=True)
+        if(self.frequencyStepMode == "STEP_SIZE"):
+            row = layout.row()
+            row.prop(self, "frequencyStepSize")
+        else:
+            row = layout.row()
+            row.prop(self, "frequencyStepCount")
+        row = layout.row()
+        row.prop(self, "minFrequency")
         row = layout.row()
         row.prop(self, "maxFrequency")
         row = layout.row()
@@ -310,7 +340,10 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
              context,
              filepath="",
              title="head-related transfer functions",
+             frequencyStepMode='STEP_SIZE',
+             frequencyStepCount=129,
              frequencyStepSize=100,
+             minFrequency=0,
              maxFrequency=20000,
              cpuFirst=1,
              cpuLast=10,
@@ -451,6 +484,9 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
             unitFactor = 0.001
 
         lowFrequency = 0
+        """
+        TODO what is this?
+        
         lowFrequencyCores = 0
         if not frequencyDependency:
             obj = bpy.data.objects["Reference"]
@@ -462,6 +498,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
             else:
                 lowFrequency = 0
                 lowFrequencyCores = 0
+        """
 
         evaluationGridPath = ("%s/Mesh2Input/EvaluationGrids" % programPath)
 
@@ -503,7 +540,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                 objects.append(obj.name)
 
         maxObjectFrequency = ([])
-        for ii in range(0, len(objects)):
+        for ii in range(0, len(objects)): # NOTE what is this?
             if not objects[ii] == 'Reference' and not objects[ii] == 'User':
                 try:
                     if maxObjectFrequency.count(int(objects[ii][1:len(objects[ii]):1])) == 0:
@@ -626,12 +663,21 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                 shutil.copyfile(("%s/%s/Elements.txt" % (evaluationGridPath, evaluationGrid5)), ("%s/EvaluationGrids/%s/Elements.txt" % (filepath1, evaluationGrid5)))
 
 # ------------------------ Calculate frequency information ---------------------
+        lowFrequencyCores = 0
+        
+        if frequencyStepMode == 'STEP_COUNT':
+            frequencyStepSize = (maxFrequency-minFrequency) / (frequencyStepCount-1)
+            if minFrequency == 0:
+                minFrequency += frequencyStepSize
+        lowFrequency = minFrequency - frequencyStepSize
+
         frequencySteps = divmod(maxFrequency-lowFrequency, frequencyStepSize)
-        if not frequencySteps[1] == 0:
-            raise Exception("Error, frequencyStepSize is not a divisor of maxFrequency-lowFrequency")
+        frequencySteps = (int(frequencySteps[0]), int(frequencySteps[1]))
             
         numCoresAvailable = (cpuLast-cpuFirst+1-lowFrequencyCores)*numCoresPerCPU
+        print("numCoresAvailable %f" % numCoresAvailable)
         numCoresUsedPerEar = int((cpuLast-cpuFirst+1-lowFrequencyCores*numEars)*numCoresPerCPU/numEars)
+        print("numCoresUsedPerEar %f" % numCoresUsedPerEar)
         frequencyStepsPerCore = divmod(frequencySteps[0], numCoresUsedPerEar)
 
         cpusAndCores = ([])
@@ -704,7 +750,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
                         for ii in range(0, tmpNumFrequencies):
                             if (frequencyStepSize*countFreq) <= maxFrequency:
                                 countFreq = countFreq + 1
-                                tmp.append(frequencyStepSize*countFreq)
+                                tmp.append(frequencyStepSize*countFreq+lowFrequency)
                             else:
                                 break
                         frequencies[cpu-1][core-1] = tmp
@@ -729,7 +775,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
         fw("####### Frequency information #######\n")
         fw("#####################################\n\n")
         fw("Highest evaluated Frequency: %d\n" % maxFrequency)
-        fw("Frequency Stepsize: %d\n" % frequencyStepSize)
+        fw("Frequency Stepsize: %f\n" % frequencyStepSize)
         fw("Frequency Steps: %d\n" % frequencySteps[0])
         fw("Frequency steps per Core: %d\n\n" % frequencyStepsPerCore[0])
         fw("#####################################\n")
@@ -743,7 +789,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
             for cpu in range(1, 11):
                 fw("CPU_%d (Core %d):\n" % (cpu, core))
                 for ii in range(0, len(frequencies[cpu-1][core-1])):
-                    fw("    %d\n" % frequencies[cpu-1][core-1][ii])
+                    fw("    %f\n" % frequencies[cpu-1][core-1][ii])
             fw("\n")
         file.close
 

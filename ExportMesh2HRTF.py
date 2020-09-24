@@ -227,8 +227,8 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
     reference: BoolProperty(
         name="Reference",
         description="The complex pressure at the evaluation grid is divided by a point source in the origin of the coordinate system.",
-        default=True
-    ),
+        default=True,
+    )
     unit: EnumProperty(
         name="Unit",
         description="Unit of the object",
@@ -281,6 +281,8 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
         row = layout.row()
         row.prop(self, "densityOfMedium")
         layout.label(text="ObjectMeshes:")
+        row = layout.row()
+        row.prop(self, "reference")
         row = layout.row()
         row.prop(self, "unit")
         row = layout.row()
@@ -348,6 +350,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
              sourcePosition=(0, 101, 0),
              speedOfSound=346.18,
              densityOfMedium=1.1839,
+             reference=True,
              unit='mm',
              frequencyDependency=False,
              nearFieldCalculation=False,
@@ -931,7 +934,7 @@ class ExportMesh2HRTF(bpy.types.Operator, ExportHelper):
 
         fw("% Reference to a point source in the origin\n")
         fw("% accoring to the classical HRTF definition\n")
-        if self.reference:
+        if reference:
             fw("reference    = true;\n")
         else:
             fw("reference    = false;\n")
